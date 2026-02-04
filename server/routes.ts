@@ -11,13 +11,9 @@ function getUserId(req: any): string {
 }
 
 async function getRoleForUser(userId: string): Promise<"admin" | "lecturer" | "student" | null> {
-  const lecturer = await storage.getLecturerByUserId(userId);
-  if (lecturer) return "lecturer";
-
-  const student = await storage.getStudentByUserId(userId);
-  if (student) return "student";
-
-  return null;
+  const user = await authStorage.getUser(userId);
+  if (!user) return null;
+  return user.role as any;
 }
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {

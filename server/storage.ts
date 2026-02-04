@@ -9,6 +9,7 @@ import {
   notifications,
   students,
   units,
+  users,
   type Course,
   type CreateCourseRequest,
   type CreateDepartmentRequest,
@@ -614,6 +615,43 @@ export class DatabaseStorage implements IStorage {
   }
 
   async seed(): Promise<void> {
+    // Create admin user in the auth table
+    const [adminUser] = await db
+      .insert(users)
+      .values({
+        username: "admin",
+        password: "password123",
+        role: "admin",
+        firstName: "System",
+        lastName: "Administrator",
+      })
+      .onConflictDoNothing()
+      .returning();
+
+    // Create lecturer user
+    await db
+      .insert(users)
+      .values({
+        username: "BeTTI/LEC/001",
+        password: "password123",
+        role: "lecturer",
+        firstName: "Alex",
+        lastName: "Kiprotich",
+      })
+      .onConflictDoNothing();
+
+    // Create student user
+    await db
+      .insert(users)
+      .values({
+        username: "SCM/6155/25S",
+        password: "password123",
+        role: "student",
+        firstName: "Joyce",
+        lastName: "Chebet",
+      })
+      .onConflictDoNothing();
+
     const existingDepartments = await db.select({ id: departments.id }).from(departments).limit(1);
     if (existingDepartments.length > 0) return;
 
