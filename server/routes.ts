@@ -7,7 +7,7 @@ import { isAuthenticated, registerAuthRoutes, setupAuth } from "./replit_integra
 import { authStorage } from "./replit_integrations/auth/storage";
 
 function getUserId(req: any): string {
-  return req.user?.claims?.sub;
+  return req.user?.id;
 }
 
 async function getRoleForUser(userId: string): Promise<"admin" | "lecturer" | "student" | null> {
