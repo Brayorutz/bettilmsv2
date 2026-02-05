@@ -15,15 +15,6 @@ export default function HomeRouter() {
   const auth = useAuth();
   const me = useMe();
 
-  // If not authenticated, show landing
-  if (auth.isLoading) {
-    return <Landing />;
-  }
-
-  if (!auth.isAuthenticated) {
-    return <Landing />;
-  }
-
   // If /api/me fails with 401, send to login
   useEffect(() => {
     if (me.error) {
@@ -38,6 +29,15 @@ export default function HomeRouter() {
       }
     }
   }, [me.error, toast]);
+
+  // If not authenticated, show landing
+  if (auth.isLoading) {
+    return <Landing />;
+  }
+
+  if (!auth.isAuthenticated) {
+    return <Landing />;
+  }
 
   if (me.isLoading) {
     return <Landing />;
