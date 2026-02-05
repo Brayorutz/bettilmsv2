@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import Landing from "@/pages/Landing";
@@ -15,10 +15,15 @@ export default function HomeRouter() {
   const auth = useAuth();
   const me = useMe();
 
-  // If /api/me fails with 401, send to login
+  const isAuthLoading = auth.isLoading;
+  const isMeLoading = me.isLoading;
+  const isAuthenticated = auth.isAuthenticated;
+  const meError = me.error;
+  const meData = me.data;
+
   useEffect(() => {
-    if (me.error) {
-      const msg = (me.error as Error).message || "";
+    if (meError) {
+      const msg = (meError as Error).message || "";
       if (msg.startsWith("401:")) {
         toast({
           title: "Unauthorized",
@@ -28,31 +33,40 @@ export default function HomeRouter() {
         setTimeout(() => (window.location.href = "/api/login"), 500);
       }
     }
-  }, [me.error, toast]);
+  }, [meError, toast]);
 
-  // If not authenticated, show landing
-  if (auth.isLoading) {
+  // Handle redirects based on role once data is loaded
+  useEffect(() => {
+    if (!isAuthLoading && !isMeLoading && isAuthenticated && meData?.role) {
+      const role = meData.role;
+      if (role === "admin") setLocation("/admin");
+      else if (role === "lecturer") setLocation("/lecturer");
+      else if (role === "student") setLocation("/student");
+    }
+  }, [isAuthLoading, isMeLoading, isAuthenticated, meData, setLocation]);
+
+  if (isAuthLoading) {
     return <Landing />;
   }
 
-  if (!auth.isAuthenticated) {
+  if (!isAuthenticated) {
     return <Landing />;
   }
 
-  if (me.isLoading) {
+  if (isMeLoading) {
     return <Landing />;
   }
 
-  const role = me.data?.role ?? null;
+  const role = meData?.role ?? null;
 
   if (!role) {
     return <Onboarding />;
   }
 
+  // Show the appropriate dashboard directly on the root path as well
   if (role === "admin") return <AdminOverview />;
   if (role === "lecturer") return <LecturerDashboard />;
   if (role === "student") return <StudentDashboard />;
 
-  // unknown fallback
   return <Onboarding />;
 }

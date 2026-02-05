@@ -285,7 +285,11 @@ export class DatabaseStorage implements IStorage {
     const [row] = await db
       .insert(units)
       .values({
-        ...rest,
+        courseId: rest.courseId,
+        title: rest.title,
+        code: rest.code,
+        description: rest.description,
+        isActive: rest.isActive ?? true,
         lecturerId: lecturer.id,
       })
       .returning();
