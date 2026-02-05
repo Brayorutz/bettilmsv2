@@ -151,7 +151,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createLecturer(input: CreateLecturerRequest): Promise<Lecturer> {
-    const [row] = await db.insert(lecturers).values(input).returning();
+    // Automatically create a user account for the lecturer
+    const [user] = await db
+      .insert(users)
+      .values({
+        username: input.staffNumber,
+        password: "password123", // Default password
+        role: "lecturer",
+        firstName: input.fullName.split(" ")[0],
+        lastName: input.fullName.split(" ").slice(1).join(" ") || "",
+      })
+      .returning();
+
+    const [row] = await db.insert(lecturers).values({
+      ...input,
+      userId: user.id,
+    }).returning();
     return row;
   }
 
@@ -356,8 +371,20 @@ export class DatabaseStorage implements IStorage {
     let student = await this.getStudentByAdmissionNumber(input.admissionNumber);
 
     if (!student) {
+      // Automatically create a user account for the student
+      const [user] = await db
+        .insert(users)
+        .values({
+          username: input.admissionNumber,
+          password: "password123", // Default password
+          role: "student",
+          firstName: input.fullName.split(" ")[0],
+          lastName: input.fullName.split(" ").slice(1).join(" ") || "",
+        })
+        .returning();
+
       student = await this.createStudent({
-        userId: `student:${input.admissionNumber}`,
+        userId: user.id,
         admissionNumber: input.admissionNumber,
         fullName: input.fullName,
         mustChangePassword: true,
